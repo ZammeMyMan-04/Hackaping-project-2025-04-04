@@ -135,6 +135,7 @@ async def main():
         print(information)
 
     print("")
+    return None
     #os.system("deactivate")
 
 
