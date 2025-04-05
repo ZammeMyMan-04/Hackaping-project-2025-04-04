@@ -1,7 +1,10 @@
 SETUP:
 
-Add an alias to your ~/.bashrc (or ~/.zshrc if you're using zsh):
-alias githelp="source ~/path/to/project/venv/bin/activate && python3 ~/path/to/project/main.py"
+Add an alias to your ~/.bashrc:
+alias githelp='bash ~/path/to/project/githelp.sh'
+
+Add Opper API-key to your ~/.bashrc:
+export OPPER_API_KEY='your api-key'
 
 Reload the terminal or run:
 source ~/.bashrc
