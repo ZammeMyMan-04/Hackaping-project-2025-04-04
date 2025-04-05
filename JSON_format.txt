@@ -1,0 +1,12 @@
+[
+    {
+        "categoty": str
+        "command": str
+        "description": str
+    },
+    {
+        "categoty": "Main Porcelain Commands"
+        "command": "add"
+        "description": "Add file contents to the index"
+    }
+]

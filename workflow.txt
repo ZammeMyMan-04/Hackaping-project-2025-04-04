@@ -1,0 +1,15 @@
+
+1. Användaren skriver vad hen vill göra i naturligt språk
+
+2. Opper analyserar input och hitta nyckelord (vad användaren vill göra)
+
+3. (Bestäm rätt ordning som kommandon ska utföras)
+
+3. (Mellansteg) Opper listar nyckelorden och konfermerar att de är korrekt
+
+4. Konvertera till kommandon och skriv ut alla kommandon
+
+5. Konfermerar vilka kommandon som ska köras
+
+6. Kör kommandon
+
