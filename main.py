@@ -16,102 +16,68 @@ from services import (
 )
 
 def get_input():
-    # Skapa en parser för att ta emot kommandoradsargument
-    parser = argparse.ArgumentParser(description="GitHelp - Ställ en fråga om Git.")
-    parser.add_argument('question', nargs='+', type=str, help="Din fråga om Git")
+    # Create a parser to receive command line arguments
+    parser = argparse.ArgumentParser(description="GitHelp - Ask a question about Git.") 
+    parser.add_argument('question', nargs='+', type=str, help="Your question about Git")
     args = parser.parse_args()
     return " ".join(args.question)
 
 def run_commands(commands: GitCommands):
     print("\n***RUN COMMANDS***")
     for command in commands:
-        yes_or_no = input(f"\nKör '{command.command}'   [ja(ENTER), nej]: ")
-        if yes_or_no in ["", "ja"]:
+        user_response = input(f"\nDo you want to execute the command: '{command.command}'? [yes(ENTER)/no]: ").strip().lower()
+        if user_response in ["", "yes"]:
             if "git commit -m" in command.command:
-                message = input("Enter commit message: ")
-                os.system(f'git commit -m "{message}"')
+                commit_message = input("Please enter a commit message: ").strip()
+                os.system(f'git commit -m "{commit_message}"')
             else:
                 os.system(command.command)
+        else:
+            print(f"Skipped: {command.command}")
     print("\nDONE\n")
 
 async def main():
-    user_input = get_input()
+    user_question = get_input()
 
-    if not user_input:
-        print("Skriv en fråga.")
+    if not user_question:
+        print("Please ask a question.")
         return
 
     opper = AsyncOpper()
 
-    # 1️⃣ Användaren skriver vad hen vill göra
-    #user_input = input("Input: ")
+    # Step 1: Identify the type of question
+    question_category = await extract_question_type(opper, user_question)
+    print(f"\n{question_category.type}:\n")
 
-    # question_type, _ = await opper.call(
-    #     name="extractQuestionFile",
-    #     instructions=instructions_validate_answer,
-    #     input=user_input,
-    #     output_type=QuestionType
-    # )
+    if question_category.type == "commands":
 
-    # 1: Identify the type of question
-    question_type = await extract_question_type(opper, user_input)
-    print(f"\n{question_type.type}:\n")
+        # Step 2: Extract keywords
+        extracted_keywords = await extract_keywords(opper, user_question)
 
-    if question_type.type == "commands":
+        # Step 3: Confirm keywords
+        print("\n🔍 The AI identified the following keywords:")
+        print(", ".join(extracted_keywords.keywords))
+        confirmation = input("Are these correct? (yes/no): ").strip().lower()
 
-        # 2️⃣ Opper analyserar input och extraherar nyckelord
-        # keywords_result, _ = await opper.call(
-        #     name="extractGitKeywords",
-        #     instructions=instructions_find_keywords,
-        #     input=user_input,
-        #     output_type=GitKeywords
-        # )
-
-        # 2: Extract keywords
-        keywords_result = await extract_keywords(opper, user_input)
-
-        # 3: Confirm keywords
-        print("\n🔍 AI hittade följande nyckelord:")
-        print(", ".join(keywords_result.keywords))
-        confirm = input("Är dessa korrekt? (ja/nej): ").strip().lower()
-
-        if confirm not in ["ja", ""]:
-            print("❌ Avbryter. Försök igen med en tydligare beskrivning.")
+        if confirmation not in ["yes", ""]:
+            print("❌ Operation canceled. Please try again with a clearer description.")
             return
 
-        # 4️⃣ Konvertera nyckelord till Git-kommandon
-        # commands_result_0, _ = await opper.call(
-        #     name="generateGitCommands",
-        #     instructions=instructions_generate_gitcommands,
-        #     input=", ".join(keywords_result.keywords),
-        #     output_type=GitCommands
-        # )
+        # Step 4: Generate Git commands
+        git_commands = await generate_git_commands(opper, extracted_keywords.keywords, user_question)
 
-        # 4: Generate Git commands
-        commands = await generate_git_commands(opper, keywords_result.keywords, user_input)
-
-
-
-        # final_commands_result, _ = await opper.call(
-        #     name="generateGitCommands",
-        #     instructions=instructions_improve_commandorder,
-        #     input=f"Current command order: {commands.commands}, original input: {user_input}",
-        #     output_type=GitCommands
-        # )
-
-        # 5️⃣ Bekräfta vilka kommandon som ska köras
-        # 5: Print the generated commands and their descriptions
-        print("\n🚀 Följande Git-kommandon har genererats:")
-        for index, command in enumerate(commands.commands):
+        # Step 5: Print the generated commands and their descriptions
+        print("\n🚀 The following Git commands have been generated:")
+        for index, command in enumerate(git_commands.commands):
             print(f"\n{index+1}. 📌 {command.command}")
             print(f"   📝 {command.description}")
 
-        # 6: Ask for confirmation to run the commands
-        run_commands(commands.commands)
+        # Step 6: Ask for confirmation to execute the commands
+        run_commands(git_commands.commands)
 
-    elif question_type.type == "explanation":
+    elif question_category.type == "explanation":
 
-        await give_explanation(opper, user_input)
+        await give_explanation(opper, user_question)
 
 if __name__ == "__main__":
     asyncio.run(main())
