@@ -14,6 +14,14 @@ from services import (
     generate_git_commands,
     give_explanation
 )
+import json
+
+def load_git_commands(filepath: str):
+    with open(filepath, 'r') as file:
+        return json.load(file)
+
+GIT_COMMANDS_DB = load_git_commands("git_commands.json")
+
 
 def get_input():
     # Create a parser to receive command line arguments
@@ -21,6 +29,7 @@ def get_input():
     parser.add_argument('question', nargs='+', type=str, help="Your question about Git")
     args = parser.parse_args()
     return " ".join(args.question)
+
 
 def run_commands(commands: GitCommands):
     print("\n***RUN COMMANDS***")
@@ -36,6 +45,7 @@ def run_commands(commands: GitCommands):
             print(f"Skipped: {command.command}")
     print("\nDONE\n")
 
+
 async def main():
     user_question = get_input()
 
@@ -47,7 +57,7 @@ async def main():
 
     # Step 1: Identify the type of question
     question_category = await extract_question_type(opper, user_question)
-    print(f"\n{question_category.type}:\n")
+    # print(f"---\n{question_category.type}:\n---\n")
 
     if question_category.type == "commands":
 
@@ -76,8 +86,10 @@ async def main():
         run_commands(git_commands.commands)
 
     elif question_category.type == "explanation":
-
         await give_explanation(opper, user_question)
+
+    elif question_category.type == "not_supported":
+        print("❌ This question type is not supported yet. Please try again with a different question.\n")
 
 if __name__ == "__main__":
     asyncio.run(main())
